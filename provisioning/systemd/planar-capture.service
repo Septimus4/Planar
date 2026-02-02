@@ -1,0 +1,29 @@
+[Unit]
+Description=Planar capture daemon - LiDAR and IMU remote control service
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=dialout
+WorkingDirectory=/home/pi/planar
+ExecStart=/usr/bin/python3 -m capture.daemon \
+    --session-dir /var/planar/sessions \
+    --port 8080 \
+    --lidar-device /dev/rplidar \
+    --imu-bus 1 \
+    --imu-address 0x69
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/planar
+
+[Install]
+WantedBy=multi-user.target

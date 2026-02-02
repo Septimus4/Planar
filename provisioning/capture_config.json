@@ -1,0 +1,28 @@
+{
+  "lidar": {
+    "device": "/dev/rplidar",
+    "baudrate": 1000000,
+    "scan_mode": "DenseBoost",
+    "scan_frequency_hz": 10.0,
+    "enabled": true
+  },
+  "imu": {
+    "i2c_bus": 1,
+    "i2c_address": 105,
+    "sample_rate_hz": 100.0,
+    "gyro_range": 250,
+    "accel_range": 2,
+    "enabled": true
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "http_port": 8080,
+    "ws_port": 8081,
+    "auth_token": null
+  },
+  "session": {
+    "session_dir": "/var/planar/sessions",
+    "max_sessions": 100,
+    "auto_cleanup": true
+  }
+}

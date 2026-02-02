@@ -1,0 +1,12 @@
+# udev rules for RPLIDAR S3 via CP210x USB-to-UART
+# Creates stable symlinks /dev/rplidar and /dev/rplidar_s3 with permissive mode
+# Vendor: Silicon Labs, Product: CP210x UART Bridge
+
+# Primary symlink used by capture daemon
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="rplidar", MODE="0666", GROUP="dialout"
+
+# Legacy symlink for compatibility
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="rplidar_s3", MODE="0666", GROUP="dialout"
+
+# Alternative: RPLIDAR via FTDI chip (some models)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="rplidar", MODE="0666", GROUP="dialout"

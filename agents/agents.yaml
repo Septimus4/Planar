@@ -1,0 +1,99 @@
+agents:
+  - name: capture-agent
+    purpose: "Run on Pi to capture real S3 + BMI160 data and publish preview frames"
+    module: "capture.daemon"
+    cli: "python -m capture.daemon --port 8080"
+    config: "/etc/planar/capture.json"
+    status: "implemented"
+    notes: |
+      Capture-agent runs as a systemd service on the Raspberry Pi.
+      Provides REST API for remote control and WebSocket streams for real-time data.
+      
+      API Endpoints:
+        GET  /api/health          - Health check
+        GET  /api/status          - Overall system status
+        GET  /api/lidar/status    - LiDAR diagnostics
+        POST /api/lidar/start     - Start scanning
+        POST /api/lidar/stop      - Stop scanning
+        POST /api/lidar/configure - Configure parameters
+        GET  /api/imu/status      - IMU diagnostics
+        POST /api/imu/start       - Start streaming
+        POST /api/imu/stop        - Stop streaming
+        POST /api/imu/selftest    - Run self-test
+        GET  /api/session/list    - List sessions
+        POST /api/session/start   - Start capture session
+        POST /api/session/stop    - Stop capture session
+        POST /api/session/mark    - Mark station
+        GET  /api/config          - Get configuration
+        POST /api/config          - Update configuration
+      
+      WebSocket Streams:
+        /ws/preview - Real-time LiDAR scan frames
+        /ws/imu     - Real-time IMU samples
+    
+    hardware:
+      lidar:
+        model: "RPLidar S3"
+        device: "/dev/rplidar"
+        baudrate: 1000000
+        scan_mode: "Standard"  # DenseBoost unreliable on some firmware
+        note: "Use Standard mode; DenseBoost may not respond"
+      imu:
+        model: "BMI160 (Gravity)"
+        bus: 1
+        address: "0x69"
+        chip_id: "0xD1"
+        sample_rate: 100
+
+  - name: desktop-agent
+    purpose: "Desktop client for remote control and monitoring of capture-agent"
+    module: "desktop.controller"
+    cli: "python -m desktop.controller --host <PI_IP> <command>"
+    status: "implemented"
+    commands:
+      - "status              - Show system status"
+      - "monitor             - Live status monitoring"
+      - "lidar start/stop    - Control LiDAR"
+      - "imu start/stop      - Control IMU"
+      - "imu selftest        - Run IMU diagnostics"
+      - "session start NAME  - Start capture session"
+      - "session stop        - Stop capture session"
+      - "session mark        - Mark station"
+      - "interactive         - Interactive command mode"
+      - "discover            - Find devices on network"
+
+  - name: sim-agent
+    purpose: "Generate synthetic sessions (lidar + imu + events) for development and CI"
+    module: "simulation.generate_synthetic"
+    cli: "python -m simulation.generate_synthetic --scene <scene.json> --out <sessions/ID>"
+    status: "implemented"
+    outputs:
+      - sessions/<id> (directory)
+    contract:
+      - exit_code: 0 on success
+      - writes: sessions/<id>/metadata.json, lidar_station_*.csv, imu_log.csv, events.json
+
+  - name: processing-agent
+    purpose: "Process a session into merged point cloud, lines, and DXF"
+    module: "processing.pipeline"
+    cli: "python -m processing.pipeline --session <sessions/ID> --out <artifacts/ID>"
+    status: "partial"
+    status_notes: "Structure in place; ICP registration and pose graph pending"
+    inputs:
+      - sessions/<id>
+    outputs:
+      - artifacts/<id>/merged.pcd
+      - artifacts/<id>/walls.dxf
+      - artifacts/<id>/summary.json
+
+  - name: ui-agent
+    purpose: "Web UI for preview rendering and operator controls"
+    status: "planned"
+    notes: "Will connect to capture-agent WebSocket for real-time preview"
+
+  - name: ops-agent
+    purpose: "CI/CD automation, testing, and deployment"
+    status: "partial"
+    status_notes: "122 tests implemented; CI pipeline pending"
+    test_command: "pytest tests/ -v"
+    test_count: 122

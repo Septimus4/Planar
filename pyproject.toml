@@ -1,0 +1,125 @@
+[project]
+name = "planar"
+version = "0.1.0"
+description = "Tripod-based 2D indoor scanning system for capturing floor plans using stationary LiDAR scans"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [
+    { name = "Planar Team" }
+]
+keywords = ["lidar", "floor-plan", "scanning", "dxf", "cad", "imu", "raspberry-pi"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+]
+
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "ezdxf>=1.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# Full processing pipeline (desktop)
+processing = [
+    "open3d>=0.17",
+    "scikit-learn>=1.2",
+]
+
+# Capture daemon (Raspberry Pi)
+capture = [
+    "pyserial>=3.5",
+    "smbus2>=0.4",
+    "aiohttp>=3.8",
+]
+
+# Desktop client for remote control
+desktop = [
+    "requests>=2.28",
+    "websocket-client>=1.5",
+]
+
+# Development and testing
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-asyncio>=0.21",
+    "ruff>=0.1",
+    "mypy>=1.0",
+]
+
+# All dependencies (for full development setup)
+all = [
+    "planar[processing,capture,desktop,dev]",
+]
+
+[project.scripts]
+planar-capture = "capture.daemon:main"
+planar-controller = "desktop.controller:main"
+planar-process = "processing.pipeline:main"
+planar-simulate = "simulation.generate_synthetic:main"
+
+[project.urls]
+Homepage = "https://github.com/Septimus4/Planar"
+Repository = "https://github.com/Septimus4/Planar"
+Documentation = "https://github.com/Septimus4/Planar/tree/main/docs"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["capture", "desktop", "processing", "simulation"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-asyncio>=0.21",
+    "ruff>=0.1",
+    "mypy>=1.0",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in argument defaults
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["capture", "desktop", "processing", "simulation"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"

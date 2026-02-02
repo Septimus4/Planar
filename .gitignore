@@ -1,0 +1,117 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# IDE and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Documentation build
+docs/_build/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Session data (runtime generated)
+sessions/
+/var/planar/
+
+# Build artifacts
+*.o
+*.obj
+*.exe
+*.dll
+*.dylib
+*.a
+*.lib
+
+# Third-party SDK build outputs (keep source, ignore compiled)
+third_party/rplidar_sdk/build/
+third_party/rplidar_sdk/obj/
+third_party/rplidar_sdk/output/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Local configuration overrides
+config.local.json
+config.local.yaml
+*.local.json
+*.local.yaml
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+
+# Raw capture files
+*.raw
+
+# DXF output artifacts (keep examples, ignore generated)
+artifacts/
+output/
+
+# uv lock file (if using uv package manager)
+# Uncomment if you want to ignore uv.lock
+# uv.lock
