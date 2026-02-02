@@ -113,6 +113,73 @@ source .venv/bin/activate
 pip install -e ".[all]"
 ```
 
+## Windows Installer
+
+### For Users (Windows 10/11)
+
+Download and install the pre-built Windows installer:
+
+1. Go to the [Releases page](https://github.com/Septimus4/Planar/releases)
+2. Download the latest `planar-desktop-windows-<version>.zip`
+3. Extract the ZIP file
+4. Run `planar-desktop.exe`
+
+**Usage:**
+
+```cmd
+# Check status of your Raspberry Pi
+planar-desktop.exe --host 192.168.1.100 status
+
+# Start a capture session
+planar-desktop.exe --host 192.168.1.100 session start my_floor_plan
+
+# Interactive mode
+planar-desktop.exe --host 192.168.1.100 interactive
+```
+
+Alternatively, if an MSIX/MSI installer is available:
+- **MSIX**: Double-click to install (Windows 11 recommended)
+- **MSI**: Double-click to install (traditional installer)
+
+After installation, run from Start Menu or command line:
+```cmd
+planar-desktop --help
+```
+
+### For Developers (Building from Source)
+
+Build your own Windows executable using PyInstaller:
+
+**Quick Build (Recommended):**
+
+```cmd
+# Using Command Prompt
+scripts\windows\build-desktop.bat
+
+# Or using PowerShell
+.\scripts\windows\build-desktop.ps1
+```
+
+The executable will be created at: `dist\planar-desktop.exe`
+
+**Manual Build:**
+
+```cmd
+# Install build dependencies
+pip install pyinstaller
+pip install -e .[desktop]
+
+# Build executable
+pyinstaller planar-desktop.spec --clean --noconfirm
+
+# Test the executable
+dist\planar-desktop.exe --help
+```
+
+**Creating Installers:**
+
+For detailed instructions on creating MSIX or MSI installer packages, see the [Windows Packaging Guide](docs/WINDOWS_PACKAGING.md).
+
 ## Quick Start
 
 ### 1. Set up Hardware (Raspberry Pi)
