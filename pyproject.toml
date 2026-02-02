@@ -123,6 +123,11 @@ ignore_missing_imports = true
 testpaths = ["tests"]
 asyncio_mode = "auto"
 addopts = "-v --tb=short"
+# Custom markers for hardware testing
+markers = [
+    "hardware: marks tests as requiring physical hardware (deselect with '-m \"not hardware\"')",
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
 # Filter third-party deprecation warnings from ezdxf's use of legacy pyparsing API
 # This is fixed in ezdxf master (commit 526a951, Dec 24 2025) and will be in ezdxf>=1.4.5
 # See: https://github.com/mozman/ezdxf/issues/1363

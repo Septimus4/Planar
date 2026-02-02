@@ -10,7 +10,7 @@
 - �️ **Web UI** - Real-time LiDAR preview and session controls in your browser
 - �📊 **Session Management** - Automatic session recording with LiDAR frames, IMU data, and events
 - 🏗️ **DXF Export** - Clean CAD-ready floor plan exports via ezdxf
-- 🧪 **Comprehensive Testing** - 179 unit and integration tests with hardware test support
+- 🧪 **Comprehensive Testing** - 195 unit and integration tests with mock drivers for fast development
 - 📖 **Full Documentation** - User guide, quick reference, and hardware setup instructions
 
 ## System Architecture
@@ -276,15 +276,45 @@ Planar/
 
 ## Testing
 
+The test suite includes 195 tests covering unit tests, integration tests, and hardware tests. Mock drivers enable fast testing without physical hardware.
+
 ```bash
-# Run all tests
+# Run all tests (uses mock drivers by default)
 pytest tests/ -v
 
-# Run without hardware tests
+# Run tests with real hardware connected
+pytest tests/ -v --hardware
+
+# Skip hardware-marked tests
 pytest tests/ -v -m "not hardware"
 
 # Run with coverage
 pytest tests/ --cov=capture --cov=desktop --cov-report=html
+
+# Run only mock driver tests
+pytest tests/test_mocks.py -v
+```
+
+### Mock Drivers
+
+The project includes mock drivers (`tests/mocks.py`) for development without hardware:
+
+```python
+from tests.mocks import MockLidarDriver, MockIMUDriver
+
+# Create mock LiDAR with custom room geometry
+lidar = MockLidarDriver(
+    room_walls=[(0, 0, 4, 0), (4, 0, 4, 3), (4, 3, 0, 3), (0, 3, 0, 0)],
+    scanner_pos=(2, 1.5),
+)
+lidar.connect()
+lidar.start_scan()
+
+# Create mock IMU with simulated rotation
+imu = MockIMUDriver()
+imu.connect()
+imu.set_rotation_rate(10.0)  # 10 deg/s rotation
+sample = imu.read_sample()
 ```
 
 ## Configuration

@@ -10,14 +10,36 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 
+def pytest_addoption(parser):
+    """Add custom command-line options."""
+    parser.addoption(
+        "--hardware",
+        action="store_true",
+        default=False,
+        help="Run tests that require physical hardware (LiDAR, IMU)",
+    )
+
+
 def pytest_configure(config):
     """Register custom markers."""
     config.addinivalue_line(
-        "markers", "hardware: marks tests as requiring hardware (deselect with '-m \"not hardware\"')"
+        "markers", "hardware: marks tests as requiring hardware (run with --hardware)"
     )
     config.addinivalue_line(
         "markers", "asyncio: marks tests as async"
     )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Skip hardware tests unless --hardware flag is provided."""
+    if config.getoption("--hardware"):
+        # --hardware given: don't skip hardware tests
+        return
+    
+    skip_hardware = pytest.mark.skip(reason="need --hardware option to run")
+    for item in items:
+        if "hardware" in item.keywords:
+            item.add_marker(skip_hardware)
 
 
 @pytest.fixture
@@ -192,3 +214,74 @@ def skip_without_hardware(hardware_available):
     """Skip test if hardware is not available."""
     if not hardware_available["all"]:
         pytest.skip("Hardware not available")
+
+
+# ============================================================================
+# Mock Driver Fixtures
+# ============================================================================
+
+@pytest.fixture
+def mock_lidar():
+    """Create a mock LiDAR driver with simulated room scanning."""
+    from tests.mocks import MockLidarDriver
+    driver = MockLidarDriver()
+    driver.connect()
+    yield driver
+    driver.disconnect()
+
+
+@pytest.fixture
+def mock_imu():
+    """Create a mock IMU driver with simulated sensor data."""
+    from tests.mocks import MockIMUDriver
+    driver = MockIMUDriver()
+    driver.connect()
+    yield driver
+    driver.disconnect()
+
+
+@pytest.fixture
+def mock_lidar_with_rotation(mock_imu):
+    """Mock IMU that simulates a rotation for yaw testing."""
+    mock_imu.set_rotation_rate(10.0)  # 10 deg/s rotation
+    return mock_imu
+
+
+@pytest.fixture
+def lidar_driver(request):
+    """Get LiDAR driver - mock by default, real with --hardware."""
+    use_hardware = request.config.getoption("--hardware")
+    
+    if use_hardware:
+        from capture.lidar_driver import RPLidarDriver
+        driver = RPLidarDriver()
+        if not driver.connect():
+            pytest.skip("Could not connect to LiDAR hardware")
+        yield driver
+        driver.disconnect()
+    else:
+        from tests.mocks import MockLidarDriver
+        driver = MockLidarDriver()
+        driver.connect()
+        yield driver
+        driver.disconnect()
+
+
+@pytest.fixture
+def imu_driver(request):
+    """Get IMU driver - mock by default, real with --hardware."""
+    use_hardware = request.config.getoption("--hardware")
+    
+    if use_hardware:
+        from capture.imu_driver import BMI160Driver
+        driver = BMI160Driver()
+        if not driver.connect():
+            pytest.skip("Could not connect to IMU hardware")
+        yield driver
+        driver.disconnect()
+    else:
+        from tests.mocks import MockIMUDriver
+        driver = MockIMUDriver()
+        driver.connect()
+        yield driver
+        driver.disconnect()
