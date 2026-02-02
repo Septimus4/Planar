@@ -1,0 +1,90 @@
+name: Build Windows Installer
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    paths:
+      - 'desktop/**'
+      - 'planar-desktop.spec'
+      - 'scripts/windows/**'
+      - '.github/workflows/windows-build.yml'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Display Python version
+      run: python --version
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install pyinstaller
+        python -m pip install -e .[desktop]
+    
+    - name: Build executable with PyInstaller
+      run: |
+        pyinstaller planar-desktop.spec --clean --noconfirm
+    
+    - name: Test executable
+      run: |
+        dist\planar-desktop.exe --help
+      continue-on-error: true
+    
+    - name: Get version from tag
+      id: get_version
+      run: |
+        if ($env:GITHUB_REF -match 'refs/tags/v(.*)') {
+          $version = $matches[1]
+        } else {
+          $version = "dev"
+        }
+        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+      shell: pwsh
+    
+    - name: Upload executable as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: planar-desktop-windows-${{ steps.get_version.outputs.VERSION }}
+        path: dist/planar-desktop.exe
+        retention-days: 30
+    
+    - name: Create release archive
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        Compress-Archive -Path dist\planar-desktop.exe -DestinationPath planar-desktop-windows-${{ steps.get_version.outputs.VERSION }}.zip
+      shell: pwsh
+    
+    - name: Calculate SHA256
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        $hash = Get-FileHash -Path "planar-desktop-windows-${{ steps.get_version.outputs.VERSION }}.zip" -Algorithm SHA256
+        $hash.Hash | Out-File -FilePath "planar-desktop-windows-${{ steps.get_version.outputs.VERSION }}.zip.sha256"
+        Write-Output "SHA256: $($hash.Hash)"
+      shell: pwsh
+    
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          planar-desktop-windows-${{ steps.get_version.outputs.VERSION }}.zip
+          planar-desktop-windows-${{ steps.get_version.outputs.VERSION }}.zip.sha256
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

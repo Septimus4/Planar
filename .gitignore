@@ -74,6 +74,13 @@ sessions/
 *.a
 *.lib
 
+# PyInstaller
+*.spec.bak
+build/
+dist/
+*.manifest
+*.spec~
+
 # Third-party SDK build outputs (keep source, ignore compiled)
 third_party/rplidar_sdk/build/
 third_party/rplidar_sdk/obj/
@@ -111,6 +118,16 @@ temp/
 # DXF output artifacts (keep examples, ignore generated)
 artifacts/
 output/
+
+# Windows installer artifacts
+*.msix
+*.msi
+*.appx
+*.wixobj
+*.wixpdb
+installer/bin/
+installer/obj/
+package/
 
 # uv lock file (if using uv package manager)
 # Uncomment if you want to ignore uv.lock

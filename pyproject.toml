@@ -67,6 +67,7 @@ all = [
 [project.scripts]
 planar-capture = "capture.daemon:main"
 planar-controller = "desktop.controller:main"
+planar-desktop = "desktop.controller:main"
 planar-process = "processing.pipeline:main"
 planar-simulate = "simulation.generate_synthetic:main"
 
