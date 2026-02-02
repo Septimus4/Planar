@@ -23,7 +23,7 @@ import math
 import os
 import random
 from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict, Any
 
@@ -296,7 +296,7 @@ class SyntheticSession:
         # Metadata
         metadata = {
             "project": "Planar-synthetic",
-            "created": datetime.utcnow().isoformat() + "Z",
+            "created": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "stations": len(self.stations),
             "room_walls": len(self.room.walls),
             "lidar_config": asdict(self.lidar_config),

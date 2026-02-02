@@ -20,7 +20,7 @@ import signal
 import sys
 import time
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, asdict
 import threading
@@ -422,7 +422,7 @@ class CaptureDaemon:
         """Save session metadata to file."""
         metadata = {
             "project": "Planar",
-            "created": datetime.utcnow().isoformat() + "Z",
+            "created": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "name": self.session.name,
             "stations": self.session.station_count,
             "lidar": self.lidar.get_diagnostics().get("info", {}),

@@ -123,3 +123,12 @@ ignore_missing_imports = true
 testpaths = ["tests"]
 asyncio_mode = "auto"
 addopts = "-v --tb=short"
+# Filter third-party deprecation warnings from ezdxf's use of legacy pyparsing API
+# This is fixed in ezdxf master (commit 526a951, Dec 24 2025) and will be in ezdxf>=1.4.5
+# See: https://github.com/mozman/ezdxf/issues/1363
+filterwarnings = [
+    "ignore:.*addParseAction.*deprecated:pyparsing.warnings.PyparsingDeprecationWarning",
+    "ignore:.*setResultsName.*deprecated:pyparsing.warnings.PyparsingDeprecationWarning",
+    "ignore:.*oneOf.*deprecated:pyparsing.warnings.PyparsingDeprecationWarning",
+    "ignore:.*infixNotation.*deprecated:pyparsing.warnings.PyparsingDeprecationWarning",
+]
