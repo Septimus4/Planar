@@ -75,7 +75,15 @@ class TestPyInstallerCompatibility:
 
     def test_excluded_modules_not_required(self):
         """Verify that excluded modules (capture, processing) aren't imported."""
+        # Import desktop modules to ensure they don't pull in capture/processing
+        import desktop.client  # noqa: F401
+        import desktop.controller  # noqa: F401
 
         # Desktop modules should not import capture-specific modules
-        assert 'capture' not in sys.modules or not hasattr(sys.modules.get('capture', None), 'daemon')
-        # This is just checking they're not accidentally imported by desktop modules
+        # We check that 'capture' is either not loaded, or if it is loaded,
+        # it doesn't have the daemon module (which is Raspberry Pi specific)
+        capture_loaded = 'capture' in sys.modules
+        if capture_loaded:
+            capture_module = sys.modules.get('capture')
+            assert not hasattr(capture_module, 'daemon'), \
+                "Desktop module should not import capture.daemon"

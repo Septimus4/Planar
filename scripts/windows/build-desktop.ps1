@@ -29,13 +29,28 @@ try {
 
 # Step 1: Install build dependencies
 Write-Host "[1/5] Installing build dependencies..." -ForegroundColor Yellow
-python -m pip install --upgrade pip setuptools wheel | Out-Null
-python -m pip install pyinstaller | Out-Null
+$pipOutput = python -m pip install --upgrade pip setuptools wheel 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERROR: Failed to install pip/setuptools/wheel" -ForegroundColor Red
+    Write-Host $pipOutput
+    exit 1
+}
+$pyinstallerOutput = python -m pip install pyinstaller 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERROR: Failed to install PyInstaller" -ForegroundColor Red
+    Write-Host $pyinstallerOutput
+    exit 1
+}
 
 # Step 2: Install desktop dependencies
 Write-Host ""
 Write-Host "[2/5] Installing desktop dependencies..." -ForegroundColor Yellow
-python -m pip install -e ".[desktop]" | Out-Null
+$desktopOutput = python -m pip install -e ".[desktop]" 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERROR: Failed to install desktop dependencies" -ForegroundColor Red
+    Write-Host $desktopOutput
+    exit 1
+}
 
 # Step 3: Run PyInstaller
 Write-Host ""

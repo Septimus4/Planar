@@ -447,9 +447,9 @@ signtool sign /n "Your Certificate Name" /fd SHA256 /tr http://timestamp.digicer
 ## Additional Resources
 
 - [PyInstaller Documentation](https://pyinstaller.org/en/stable/)
-- [MSIX Packaging Tool Documentation](https://docs.microsoft.com/en-us/windows/msix/packaging-tool/tool-overview)
+- [MSIX Packaging Tool Documentation](https://learn.microsoft.com/en-us/windows/msix/packaging-tool/tool-overview)
 - [WiX Toolset Tutorial](https://www.firegiant.com/wix/tutorial/)
-- [Windows Code Signing Guide](https://docs.microsoft.com/en-us/windows/win32/seccrypto/cryptography-tools)
+- [Windows Code Signing Guide](https://learn.microsoft.com/en-us/windows/win32/seccrypto/cryptography-tools)
 
 ## Support
 
