@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planar - Floor Plan Scanner</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1 class="logo">⬡ Planar</h1>
+                <span class="version">v0.1.0</span>
+            </div>
+            <div class="header-center">
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-dot disconnected"></span>
+                    <span class="status-text">Disconnected</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <input type="text" id="hostInput" placeholder="raspberrypi.local:8080" value="raspberrypi.local:8080">
+                <button id="connectBtn" class="btn btn-primary">Connect</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left Panel - Preview -->
+            <section class="panel preview-panel">
+                <div class="panel-header">
+                    <h2>LiDAR Preview</h2>
+                    <div class="preview-controls">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="autoRotate" checked>
+                            Auto-rotate
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="showGrid" checked>
+                            Grid
+                        </label>
+                        <select id="colorScheme">
+                            <option value="quality">Color by Quality</option>
+                            <option value="distance">Color by Distance</option>
+                            <option value="white">White</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="previewCanvas"></canvas>
+                    <div class="canvas-overlay" id="canvasOverlay">
+                        <span class="overlay-text">Connect to Pi to see preview</span>
+                    </div>
+                </div>
+                <div class="preview-stats">
+                    <div class="stat">
+                        <span class="stat-label">Points</span>
+                        <span class="stat-value" id="pointCount">-</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">FPS</span>
+                        <span class="stat-value" id="fps">-</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Range</span>
+                        <span class="stat-value" id="rangeDisplay">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel - Controls -->
+            <aside class="panel control-panel">
+                <!-- System Status -->
+                <section class="card">
+                    <h3>System Status</h3>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">LiDAR</span>
+                            <span class="status-indicator" id="lidarStatus">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">IMU</span>
+                            <span class="status-indicator" id="imuStatus">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Session</span>
+                            <span class="status-indicator" id="sessionStatus">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Stations</span>
+                            <span class="status-indicator" id="stationCount">0</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Device Controls -->
+                <section class="card">
+                    <h3>Device Controls</h3>
+                    <div class="control-group">
+                        <label>LiDAR</label>
+                        <div class="button-group">
+                            <button id="lidarStartBtn" class="btn btn-success">Start</button>
+                            <button id="lidarStopBtn" class="btn btn-danger">Stop</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>IMU</label>
+                        <div class="button-group">
+                            <button id="imuStartBtn" class="btn btn-success">Start</button>
+                            <button id="imuStopBtn" class="btn btn-danger">Stop</button>
+                            <button id="imuSelfTestBtn" class="btn btn-secondary">Self-Test</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Session Controls -->
+                <section class="card">
+                    <h3>Session</h3>
+                    <div class="control-group">
+                        <label for="sessionName">Session Name</label>
+                        <input type="text" id="sessionName" placeholder="my_floor_plan">
+                    </div>
+                    <div class="button-group vertical">
+                        <button id="sessionStartBtn" class="btn btn-primary btn-large">
+                            <span class="btn-icon">▶</span> Start Session
+                        </button>
+                        <button id="markStationBtn" class="btn btn-success btn-large" disabled>
+                            <span class="btn-icon">📍</span> Mark Station
+                        </button>
+                        <button id="sessionStopBtn" class="btn btn-danger btn-large" disabled>
+                            <span class="btn-icon">⏹</span> Stop Session
+                        </button>
+                    </div>
+                </section>
+
+                <!-- IMU Data -->
+                <section class="card">
+                    <h3>IMU Data</h3>
+                    <div class="imu-display">
+                        <div class="imu-row">
+                            <span class="imu-label">Gyro Z</span>
+                            <span class="imu-value" id="gyroZ">- °/s</span>
+                        </div>
+                        <div class="imu-row">
+                            <span class="imu-label">Accel Z</span>
+                            <span class="imu-value" id="accelZ">- m/s²</span>
+                        </div>
+                        <div class="imu-row">
+                            <span class="imu-label">Level</span>
+                            <span class="imu-value" id="levelStatus">--</span>
+                        </div>
+                        <div class="imu-row">
+                            <span class="imu-label">Temp</span>
+                            <span class="imu-value" id="temperature">- °C</span>
+                        </div>
+                    </div>
+                    <div class="level-indicator">
+                        <canvas id="levelCanvas" width="100" height="100"></canvas>
+                    </div>
+                </section>
+
+                <!-- Quick Tips -->
+                <section class="card tips-card">
+                    <h3>💡 Tips</h3>
+                    <ul class="tips-list">
+                        <li>Ensure tripod is level before scanning</li>
+                        <li>Aim for 30-50% overlap between stations</li>
+                        <li>Wait 2 seconds after positioning</li>
+                        <li>Avoid moving during station capture</li>
+                    </ul>
+                </section>
+            </aside>
+        </main>
+
+        <!-- Footer / Log -->
+        <footer class="footer">
+            <div class="log-container">
+                <div class="log-header">
+                    <span>Event Log</span>
+                    <button id="clearLogBtn" class="btn btn-small">Clear</button>
+                </div>
+                <div class="log-content" id="logContent"></div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

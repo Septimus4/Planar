@@ -108,6 +108,7 @@ class CaptureServer:
         self.on_imu_selftest: Optional[Callable[[], Dict]] = None
         self.on_session_start: Optional[Callable[[str], bool]] = None
         self.on_session_stop: Optional[Callable[[], Dict]] = None
+        self.on_mark_station: Optional[Callable[[], Dict]] = None
         self.on_config_update: Optional[Callable[[Dict], bool]] = None
         
         # Status providers (set by daemon)
@@ -173,6 +174,20 @@ class CaptureServer:
         app.router.add_get("/ws/lidar", self._handle_ws_lidar)
         app.router.add_get("/ws/imu", self._handle_ws_imu)
         app.router.add_get("/ws/events", self._handle_ws_events)
+        app.router.add_get("/ws", self._handle_ws_unified)  # Unified endpoint for web UI
+        
+        # Session station marking
+        app.router.add_post("/session/start", self._handle_session_start)
+        app.router.add_post("/session/stop", self._handle_session_stop)
+        app.router.add_post("/session/mark_station", self._handle_mark_station)
+        
+        # Simplified device control endpoints (for web UI)
+        app.router.add_get("/status", self._handle_status)
+        app.router.add_post("/lidar/start", self._handle_lidar_start)
+        app.router.add_post("/lidar/stop", self._handle_lidar_stop)
+        app.router.add_post("/imu/start", self._handle_imu_start)
+        app.router.add_post("/imu/stop", self._handle_imu_stop)
+        app.router.add_post("/imu/self_test", self._handle_imu_selftest)
         
         # Health check
         app.router.add_get("/health", self._handle_health)
@@ -399,6 +414,21 @@ class CaptureServer:
         
         return web.json_response({"error": "Handler not configured"}, status=501)
     
+    async def _handle_mark_station(self, request: web.Request) -> web.Response:
+        """Mark a station in the current session."""
+        if not self._check_auth(request):
+            return web.json_response({"error": "Unauthorized"}, status=401)
+        
+        if self.on_mark_station:
+            result = self.on_mark_station()
+            if result.get("status") == "ok":
+                await self._broadcast_event("station_captured", result)
+                return web.json_response(result)
+            else:
+                return web.json_response(result, status=400)
+        
+        return web.json_response({"error": "Handler not configured"}, status=501)
+    
     # === WebSocket Handlers ===
     
     async def _handle_ws_lidar(self, request: web.Request) -> web.WebSocketResponse:
@@ -486,6 +516,47 @@ class CaptureServer:
         
         return ws
     
+    async def _handle_ws_unified(self, request: web.Request) -> web.WebSocketResponse:
+        """Unified WebSocket endpoint for web UI - receives both LiDAR and IMU data."""
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+        
+        # Add to all client sets for unified streaming
+        self._lidar_clients.add(ws)
+        self._imu_clients.add(ws)
+        self._event_clients.add(ws)
+        logger.info(f"Unified WebSocket client connected")
+        
+        # Send initial status
+        if self.get_status:
+            status = self.get_status()
+            await ws.send_json({
+                "type": "status",
+                "lidar": status.get("lidar", {}),
+                "imu": status.get("imu", {}),
+                "session": status.get("session", {}),
+                "timestamp": time.time()
+            })
+        
+        try:
+            async for msg in ws:
+                if msg.type == aiohttp.WSMsgType.TEXT:
+                    try:
+                        data = json.loads(msg.data)
+                        if data.get("command") == "ping":
+                            await ws.send_json({"type": "pong", "timestamp": time.time()})
+                    except json.JSONDecodeError:
+                        pass
+                elif msg.type == aiohttp.WSMsgType.ERROR:
+                    logger.error(f"WebSocket error: {ws.exception()}")
+        finally:
+            self._lidar_clients.discard(ws)
+            self._imu_clients.discard(ws)
+            self._event_clients.discard(ws)
+            logger.info(f"Unified WebSocket client disconnected")
+        
+        return ws
+    
     # === Broadcasting ===
     
     async def _broadcast_event(self, event_type: str, data: Dict[str, Any]):
@@ -511,9 +582,11 @@ class CaptureServer:
         if not self._lidar_clients:
             return
         
+        # Convert to format expected by web UI
+        # frame_data contains: points as list of (angle, distance, quality)
         msg = {
             "type": "lidar_frame",
-            "data": frame_data,
+            "points": frame_data.get("points", []),
             "timestamp": time.time()
         }
         
@@ -527,9 +600,14 @@ class CaptureServer:
         if not self._imu_clients:
             return
         
+        # Convert to format expected by web UI
         msg = {
             "type": "imu_sample",
-            "data": sample_data,
+            "gyro_z": sample_data.get("gyro_z", 0),
+            "accel_z": sample_data.get("accel_z", 0),
+            "accel_x": sample_data.get("accel_x", 0),
+            "accel_y": sample_data.get("accel_y", 0),
+            "temperature": sample_data.get("temperature", 0),
             "timestamp": time.time()
         }
         

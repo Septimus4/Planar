@@ -77,23 +77,41 @@ agents:
     purpose: "Process a session into merged point cloud, lines, and DXF"
     module: "processing.pipeline"
     cli: "python -m processing.pipeline --session <sessions/ID> --out <artifacts/ID>"
-    status: "partial"
-    status_notes: "Structure in place; ICP registration and pose graph pending"
+    status: "implemented"
+    status_notes: "Full pipeline with IMU priors, ICP, pose graph, wall extraction"
     inputs:
       - sessions/<id>
     outputs:
-      - artifacts/<id>/merged.pcd
-      - artifacts/<id>/walls.dxf
-      - artifacts/<id>/summary.json
+      - artifacts/<id>/merged_cloud.json
+      - artifacts/<id>/floor_plan.dxf
+      - artifacts/<id>/result.json
 
   - name: ui-agent
     purpose: "Web UI for preview rendering and operator controls"
-    status: "planned"
-    notes: "Will connect to capture-agent WebSocket for real-time preview"
+    module: "webui/"
+    status: "implemented"
+    files:
+      - webui/index.html
+      - webui/styles.css
+      - webui/app.js
+    notes: |
+      Opens in browser at http://<pi-host>:8080
+      Features:
+        - Real-time LiDAR point cloud preview
+        - Session start/stop/mark station controls
+        - Device status monitoring
+        - Level indicator from IMU data
+        - Event log and toast notifications
 
   - name: ops-agent
     purpose: "CI/CD automation, testing, and deployment"
     status: "partial"
-    status_notes: "122 tests implemented; CI pipeline pending"
+    status_notes: "179 tests implemented; CI pipeline pending"
     test_command: "pytest tests/ -v"
-    test_count: 122
+    test_count: 179
+
+documentation:
+  user_guide: "docs/USER_GUIDE.md"
+  quick_reference: "docs/QUICK_REFERENCE.md"
+  architecture: "docs/ARCHITECTURE.md"
+  hardware_setup: "docs/SDK_SETUP.md"

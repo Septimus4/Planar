@@ -1,6 +1,4 @@
-# Planar# Planar
-
-PLANAR is a tripod-based 2D indoor scanning system that captures precise floor plans using stationary LiDAR scans. It combines mechanical leveling, optional IMU yaw hinting, and automated scan registration to export clean CAD-ready DXF wall layouts without SLAM or complex robotics.
+# Planar
 
 **PLANAR** is a tripod-based 2D indoor scanning system that captures precise floor plans using stationary LiDAR scans. It combines mechanical leveling, optional IMU yaw hinting, and automated scan registration to export clean CAD-ready DXF wall layouts without SLAM or complex robotics.
 
@@ -9,9 +7,11 @@ PLANAR is a tripod-based 2D indoor scanning system that captures precise floor p
 - 📡 **RPLidar S3 Integration** - High-resolution 2D LiDAR scanning at 1Mbaud with Standard scan mode
 - 🔄 **BMI160 IMU Support** - 6-axis IMU for yaw reference and orientation tracking
 - 🌐 **Remote Control** - Full remote operation from desktop to Raspberry Pi via HTTP/WebSocket
-- 📊 **Session Management** - Automatic session recording with LiDAR frames, IMU data, and events
+- �️ **Web UI** - Real-time LiDAR preview and session controls in your browser
+- �📊 **Session Management** - Automatic session recording with LiDAR frames, IMU data, and events
 - 🏗️ **DXF Export** - Clean CAD-ready floor plan exports via ezdxf
-- 🧪 **Comprehensive Testing** - 122 unit and integration tests with hardware test support
+- 🧪 **Comprehensive Testing** - 179 unit and integration tests with hardware test support
+- 📖 **Full Documentation** - User guide, quick reference, and hardware setup instructions
 
 ## System Architecture
 
@@ -140,6 +140,32 @@ python -m capture.daemon --port 8080
 
 ### 3. Control from Desktop
 
+**Option A: Web UI (Recommended)**
+
+Open `http://raspberrypi.local:8080` in your browser, or open the `webui/index.html` file and enter your Pi's address.
+
+**Option B: CLI Controller**
+
+```bash
+# Check status
+python -m desktop.controller --host raspberrypi.local status
+
+# Start LiDAR and IMU
+python -m desktop.controller --host raspberrypi.local lidar start
+python -m desktop.controller --host raspberrypi.local imu start
+
+# Start a session
+python -m desktop.controller --host raspberrypi.local session start my_floor_plan
+
+# Mark stations
+python -m desktop.controller --host raspberrypi.local session mark
+
+# Stop session
+python -m desktop.controller --host raspberrypi.local session stop
+```
+
+**Option C: Python API**
+
 ```python
 from desktop.client import PlanarClient
 import asyncio
@@ -151,10 +177,8 @@ async def main():
     status = await client.get_status()
     print(f"Daemon running: {status['daemon']['running']}")
     
-    # Start LiDAR
+    # Start LiDAR and IMU
     await client.start_lidar()
-    
-    # Start IMU
     await client.start_imu()
     
     # Begin a capture session
@@ -194,10 +218,23 @@ Planar/
 │   └── controller.py       # CLI controller
 ├── processing/              # Processing pipeline
 │   ├── pipeline.py         # Main processing pipeline
+│   ├── imu_processor.py    # IMU yaw prior computation
+│   ├── scan_matcher.py     # Correlative + ICP registration
+│   ├── pose_graph.py       # Pose graph optimization
+│   ├── wall_extractor.py   # DBSCAN + RANSAC wall extraction
 │   └── dxf_exporter.py     # DXF export utilities
+├── webui/                   # Web-based operator interface
+│   ├── index.html          # Main UI page
+│   ├── styles.css          # Styling
+│   └── app.js              # WebSocket client & rendering
 ├── simulation/              # Synthetic data generation
 │   └── generate_synthetic.py
-├── tests/                   # Test suite (122 tests)
+├── docs/                    # Documentation
+│   ├── ARCHITECTURE.md     # System architecture
+│   ├── USER_GUIDE.md       # Complete user guide
+│   ├── QUICK_REFERENCE.md  # Quick reference card
+│   └── SDK_SETUP.md        # Hardware setup guide
+├── tests/                   # Test suite (179 tests)
 │   ├── test_config.py
 │   ├── test_daemon.py
 │   ├── test_lidar_driver.py

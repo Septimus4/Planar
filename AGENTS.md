@@ -43,9 +43,10 @@ This document defines autonomous AI agent roles, responsibilities, and how agent
 - **Status**: 🔄 Partial (structure ready, ICP/pose graph pending)
 
 ### ui-agent
+- **Module**: `webui/`
 - **Runs on**: Browser (connects to capture-agent)
-- **Responsibilities**: Provide preview rendering and basic controls (web UI). Uses preview frames from capture-agent (WebSocket).
-- **Status**: ⏳ Planned
+- **Responsibilities**: Provide real-time preview rendering and session controls via web UI. Uses preview frames from capture-agent (WebSocket).
+- **Status**: ✅ Implemented
 
 ### ops-agent
 - **Runs on**: CI/CD environment

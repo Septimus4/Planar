@@ -115,6 +115,7 @@ class CaptureDaemon:
         self.server.on_imu_selftest = self.imu.self_test
         self.server.on_session_start = self.start_session
         self.server.on_session_stop = self.stop_session
+        self.server.on_mark_station = self._handle_mark_station
         self.server.on_config_update = self.update_config
     
     def get_status(self) -> Dict[str, Any]:
@@ -214,13 +215,14 @@ class CaptureDaemon:
     def _on_lidar_frame(self, frame: ScanFrame):
         """Handle incoming LiDAR frame."""
         # Broadcast to WebSocket clients
+        # Format: points as [[angle_deg, distance_m, quality], ...]
         frame_data = {
             "frame_id": frame.frame_id,
             "timestamp": frame.timestamp,
             "scan_rate_hz": frame.scan_rate_hz,
             "point_count": len(frame.points),
             "points": [
-                {"angle": p.angle_deg, "distance": p.distance_m, "quality": p.quality}
+                [p.angle_deg, p.distance_m, p.quality]
                 for p in frame.points[::4]  # Subsample for preview
             ]
         }
@@ -271,8 +273,10 @@ class CaptureDaemon:
         """Broadcast IMU sample to clients."""
         sample_data = {
             "timestamp": sample.timestamp,
-            "gyro": {"x": sample.gyro_x, "y": sample.gyro_y, "z": sample.gyro_z},
-            "accel": {"x": sample.accel_x, "y": sample.accel_y, "z": sample.accel_z},
+            "gyro_z": sample.gyro_z,
+            "accel_z": sample.accel_z,
+            "accel_x": sample.accel_x,
+            "accel_y": sample.accel_y,
             "temperature": sample.temperature
         }
         
@@ -283,17 +287,25 @@ class CaptureDaemon:
     
     async def _broadcast_lidar(self, data: Dict):
         """Async broadcast for LiDAR data."""
-        await self.server._broadcast_to_clients(
-            self.server._lidar_clients,
-            {"type": "lidar_frame", "data": data, "timestamp": time.time()}
-        )
+        msg = {
+            "type": "lidar_frame",
+            "points": data.get("points", []),
+            "timestamp": time.time()
+        }
+        await self.server._broadcast_to_clients(self.server._lidar_clients, msg)
     
     async def _broadcast_imu(self, data: Dict):
         """Async broadcast for IMU data."""
-        await self.server._broadcast_to_clients(
-            self.server._imu_clients,
-            {"type": "imu_sample", "data": data, "timestamp": time.time()}
-        )
+        msg = {
+            "type": "imu_sample",
+            "gyro_z": data.get("gyro_z", 0),
+            "accel_z": data.get("accel_z", 0),
+            "accel_x": data.get("accel_x", 0),
+            "accel_y": data.get("accel_y", 0),
+            "temperature": data.get("temperature", 0),
+            "timestamp": time.time()
+        }
+        await self.server._broadcast_to_clients(self.server._imu_clients, msg)
     
     def list_sessions(self) -> List[Dict[str, Any]]:
         """List available sessions."""
@@ -449,6 +461,21 @@ class CaptureDaemon:
         
         logger.info(f"Station {station_num} marked")
         return station_num
+    
+    def _handle_mark_station(self) -> Dict[str, Any]:
+        """Handle mark station request from server."""
+        if not self.session.active:
+            return {"status": "error", "error": "No active session"}
+        
+        station_num = self.mark_station()
+        if station_num < 0:
+            return {"status": "error", "error": "Failed to mark station"}
+        
+        return {
+            "status": "ok",
+            "station_number": station_num,
+            "timestamp": time.time()
+        }
     
     def update_config(self, params: Dict[str, Any]) -> bool:
         """Update daemon configuration."""
