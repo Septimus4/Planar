@@ -1,11 +1,11 @@
 """Tests for desktop controller module."""
 
 import sys
-from io import StringIO
+
 import pytest
 
-from desktop.controller import main, CaptureController
 from desktop.client import PlanarClient
+from desktop.controller import CaptureController, main
 
 
 class TestDesktopController:
@@ -13,23 +13,20 @@ class TestDesktopController:
 
     def test_imports(self):
         """Verify all desktop modules can be imported."""
-        from desktop import controller, client
+        from desktop import client, controller
         assert hasattr(controller, 'main')
         assert hasattr(controller, 'CaptureController')
         assert hasattr(client, 'PlanarClient')
 
     def test_entry_point_help(self, monkeypatch):
         """Test that the main entry point can display help."""
-        # Capture stdout
-        captured_output = StringIO()
-        
         # Mock sys.argv to simulate --help
         monkeypatch.setattr(sys, 'argv', ['planar-desktop', '--help'])
-        
+
         # The --help flag causes argparse to call sys.exit(0)
         with pytest.raises(SystemExit) as exc_info:
             main()
-        
+
         assert exc_info.value.code == 0
 
     def test_controller_creation(self):
@@ -54,9 +51,9 @@ class TestPyInstallerCompatibility:
 
     def test_no_dynamic_imports(self):
         """Verify that desktop modules don't use problematic dynamic imports."""
-        import desktop.controller
         import desktop.client
-        
+        import desktop.controller
+
         # Check that the main modules are importable
         assert desktop.controller.__file__
         assert desktop.client.__file__
@@ -69,7 +66,7 @@ class TestPyInstallerCompatibility:
             assert requests.__version__
         except ImportError:
             pytest.skip("requests not installed (optional dependency)")
-        
+
         try:
             import websocket
             assert websocket.__version__
@@ -78,9 +75,7 @@ class TestPyInstallerCompatibility:
 
     def test_excluded_modules_not_required(self):
         """Verify that excluded modules (capture, processing) aren't imported."""
-        import desktop.controller
-        import desktop.client
-        
+
         # Desktop modules should not import capture-specific modules
         assert 'capture' not in sys.modules or not hasattr(sys.modules.get('capture', None), 'daemon')
         # This is just checking they're not accidentally imported by desktop modules

@@ -2,6 +2,29 @@
 
 This guide explains how to create Windows installer packages (MSIX or MSI) for the Planar Desktop Controller and distribute them via GitHub Releases.
 
+## Quick Start for Windows 11 Users
+
+If you're on Windows 11 and just want to get started:
+
+1. **Download the pre-built executable**:
+   - Visit [GitHub Releases](https://github.com/Septimus4/Planar/releases)
+   - Download `planar-desktop-windows-<version>.zip`
+   - Extract and run `planar-desktop.exe`
+
+2. **Or build from source**:
+   ```powershell
+   git clone https://github.com/Septimus4/Planar.git
+   cd Planar
+   .\scripts\windows\build-desktop.ps1
+   ```
+
+3. **Connect to your Raspberry Pi**:
+   ```cmd
+   planar-desktop.exe --host YOUR_PI_IP status
+   ```
+
+For creating MSIX installers (modern Windows 11 format), continue reading below.
+
 ## Overview
 
 The Planar Desktop Controller can be packaged as a standalone Windows installer using the following workflow:
